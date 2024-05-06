@@ -125,15 +125,17 @@
     ['true e]
     ['false e]
     [(? symbol? x) x]
-    [`(,(? bop? bop) ,e0 ,e1) `(,bop ,(ifarith->ifarith-tiny e0) ,(ifarith->ifarith-tiny e1))]
-    [`(,(? uop? uop) ,e) `(,uop ,(ifarith->ifarith-tiny e))]
+    [`(,(? bop? bop) ,e0 ,e1)
+     `(,bop ,(ifarith->ifarith-tiny e0) ,(ifarith->ifarith-tiny e1))]
+    [`(,(? uop? uop) ,e)
+     `(,uop ,(ifarith->ifarith-tiny e))]
     ;; 0-binding case
-    [`(let* () ,e) 'todo]
+    ;[`(let* () ,e) #t]
     ;; 1+-binding case
-    [`(let* ([,(? symbol? x0) ,e0]) ,e-body)
-     'todo]
-    [`(let* ([,(? symbol? x0) ,e0] ,rest-binding-pairs ...) ,e-body)
-     'todo]
+    [`(let* () ,e1)
+     (ifarith->ifarith-tiny e1)]
+    [`(let* ([,x0 ,e0] ,rest ...) ,e1)
+     `(let ([,x0 ,(ifarith->ifarith-tiny e0)]) ,(ifarith->ifarith-tiny `(let* (,@rest) ,e1)))]
     ;; print an arbitrary expression (must be a number at runtime)
     [`(print ,_) e]
     ;; and/or, with short-circuiting semantics
@@ -142,14 +144,14 @@
     [`(or ,e0) (ifarith->ifarith-tiny e0)]
     [`(or ,e0 ,es ...) (ifarith->ifarith-tiny `(if ,e0 true (or ,es)))]
     ;; if argument is 0, false, otherwise true
-    [`(if ,e0 ,e1 ,e2) `(if ,(ifarith->ifarith-tiny e0)
-                            ,(ifarith->ifarith-tiny e1)
-                            ,(ifarith->ifarith-tiny e2))]
+    [`(if ,e0 ,e1 ,e2)
+     `(if ,(ifarith->ifarith-tiny e0) ,(ifarith->ifarith-tiny e1) ,(ifarith->ifarith-tiny e2))]
     ;; cond where the last case is else
     [`(cond [else ,(? ifarith? else-body)])
      (ifarith->ifarith-tiny else-body)]
     [`(cond [,c0 ,e0] ,rest ...)
      (ifarith->ifarith-tiny `(if ,c0 ,e0 (cond ,@rest)))]))
+
 
 ;; Stage 3: Administrative Normal Form (ANF)
 ;; 
